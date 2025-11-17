@@ -1,0 +1,43 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/../src/autoload.php';
+
+use BlackCat\Observability\Config\ObservabilityConfig;
+use BlackCat\Observability\Storage\LocalStore;
+
+$configFile = $argv[1] ?? getenv('BLACKCAT_OBS_CONFIG') ?? null;
+$config = $configFile ? ObservabilityConfig::fromFile($configFile) : ObservabilityConfig::fromEnv();
+$args = $configFile ? array_slice($argv, 1) : $argv;
+$command = $args[1] ?? 'help';
+$store = new LocalStore($config->storageDir);
+
+switch ($command) {
+    case 'events:tail':
+        tail($store->events());
+        break;
+    case 'metrics:snapshot':
+        snapshot($store->metrics());
+        break;
+    case 'help':
+    default:
+        echo "Usage: observability events:tail | metrics:snapshot\n";
+        exit($command === 'help' ? 0 : 1);
+}
+
+function tail(array $events): void
+{
+    $slice = array_slice($events, -10);
+    echo json_encode($slice, JSON_PRETTY_PRINT) . PHP_EOL;
+}
+
+function snapshot(array $metrics): void
+{
+    $aggregate = [];
+    foreach ($metrics as $metric) {
+        $key = $metric['name'] ?? 'unknown';
+        $aggregate[$key] = ($aggregate[$key] ?? 0) + ($metric['value'] ?? 0);
+    }
+    echo json_encode($aggregate, JSON_PRETTY_PRINT) . PHP_EOL;
+}

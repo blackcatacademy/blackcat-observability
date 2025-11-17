@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT=$(realpath "$(dirname "$0")/..")
+export OBS_SERVICE=qa-test
+export OBS_STORAGE="$ROOT/var"
+php "$ROOT/bin/observability" events:tail >/dev/null
+php "$ROOT/bin/observability" metrics:snapshot >/dev/null
