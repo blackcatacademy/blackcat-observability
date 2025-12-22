@@ -16,9 +16,30 @@ This repo ships a `blackcat-cli` manifest (`blackcat-cli.json`). CLI behavior li
 blackcat observability events:tail --limit=10
 blackcat observability metrics:snapshot
 blackcat observability metrics:export prom
+blackcat observability config:print
 ```
 
-By default, the local store directory is `blackcat-observability/var` (override with `--storage-dir=...`).
+Storage directory resolution (highest priority first):
+- `--storage-dir=...`
+- runtime config `observability.storage_dir` (via `blackcat-config`, if available)
+- workspace default (`blackcat-monitoring/logs/observability` when present, otherwise `blackcat-observability/var`)
+
+## Runtime config (blackcat-config)
+
+When `blackcat-config` runtime config is available, `ObservabilityManager::boot()` reads:
+- `observability.service`
+- `observability.storage_dir`
+
+Minimal snippet:
+
+```json
+{
+  "observability": {
+    "service": "blackcat-app",
+    "storage_dir": "/var/log/blackcat/observability"
+  }
+}
+```
 
 ## Quick start
 

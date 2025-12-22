@@ -30,7 +30,7 @@ final class ObservabilityManager
         ?LoggerInterface $logger = null
     ): self {
         return new self(
-            $config ?? ObservabilityConfig::fromEnv(),
+            $config ?? ObservabilityConfig::fromRuntimeConfig(),
             $logger ?? new NullLogger()
         );
     }

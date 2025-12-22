@@ -16,15 +16,59 @@ final class ObservabilityConfig
         public readonly array $exporters = [],
     ) {}
 
+    /**
+     * Build config from BlackCat runtime config (`blackcat-config`) if available.
+     *
+     * Runtime keys:
+     * - observability.service
+     * - observability.storage_dir
+     *
+     * If runtime config is not available, falls back to safe defaults.
+     */
+    public static function fromRuntimeConfig(?string $runtimeConfigJsonFile = null): self
+    {
+        $defaults = new self(self::defaultService(), self::defaultStorageDir(), []);
+
+        if (!class_exists(\BlackCat\Config\Runtime\Config::class)) {
+            return $defaults;
+        }
+
+        if (is_string($runtimeConfigJsonFile) && trim($runtimeConfigJsonFile) !== '') {
+            \BlackCat\Config\Runtime\Config::initFromJsonFileIfNeeded(trim($runtimeConfigJsonFile));
+        } else {
+            \BlackCat\Config\Runtime\Config::tryInitFromFirstAvailableJsonFile();
+        }
+
+        if (!\BlackCat\Config\Runtime\Config::isInitialized()) {
+            return $defaults;
+        }
+
+        $repo = \BlackCat\Config\Runtime\Config::repo();
+
+        $serviceRaw = $repo->get('observability.service', $defaults->service);
+        $storageRaw = $repo->get('observability.storage_dir', $defaults->storageDir);
+
+        $service = self::nonEmptyStringOrDefault($serviceRaw, $defaults->service);
+        $storageDir = self::nonEmptyStringOrDefault($storageRaw, $defaults->storageDir);
+
+        return new self($service, $storageDir, $defaults->exporters);
+    }
+
+    /**
+     * Legacy loader.
+     *
+     * This is kept for backward compatibility but should not be relied upon in
+     * environments where `getenv()` may be blocked.
+     */
     public static function fromEnv(): self
     {
-        $configFile = getenv('BLACKCAT_OBS_CONFIG');
-        if ($configFile && is_file($configFile)) {
+        $configFile = self::safeGetenv('BLACKCAT_OBS_CONFIG');
+        if (is_string($configFile) && $configFile !== '' && is_file($configFile)) {
             return self::fromFile($configFile);
         }
 
-        $service = getenv('OBS_SERVICE') ?: 'blackcat-app';
-        $storage = getenv('OBS_STORAGE') ?: __DIR__ . '/../../var';
+        $service = self::safeGetenv('OBS_SERVICE') ?: self::defaultService();
+        $storage = self::safeGetenv('OBS_STORAGE') ?: self::defaultStorageDir();
 
         return new self($service, $storage, []);
     }
@@ -81,7 +125,7 @@ final class ObservabilityConfig
     {
         if (is_string($value)) {
             if (preg_match('/^\$\{env:([^}]+)}/', $value, $m)) {
-                return getenv($m[1]) ?: '';
+                return self::safeGetenv($m[1]) ?: '';
             }
             if (preg_match('/^\$\{file:([^}]+)}/', $value, $m)) {
                 return is_file($m[1]) ? trim((string) file_get_contents($m[1])) : '';
@@ -97,6 +141,35 @@ final class ObservabilityConfig
             return $resolved;
         }
 
+        return $value;
+    }
+
+    private static function defaultService(): string
+    {
+        return 'blackcat-app';
+    }
+
+    private static function defaultStorageDir(): string
+    {
+        return __DIR__ . '/../../var';
+    }
+
+    private static function nonEmptyStringOrDefault(mixed $value, string $default): string
+    {
+        if (!is_string($value)) {
+            return $default;
+        }
+        $value = trim($value);
+        return $value !== '' ? $value : $default;
+    }
+
+    private static function safeGetenv(string $key): string|false
+    {
+        if (!function_exists('getenv')) {
+            return false;
+        }
+        /** @var string|false $value */
+        $value = @getenv($key);
         return $value;
     }
 }
