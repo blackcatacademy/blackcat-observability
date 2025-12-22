@@ -24,6 +24,16 @@ Storage directory resolution (highest priority first):
 - runtime config `observability.storage_dir` (via `blackcat-config`, if available)
 - workspace default (`blackcat-monitoring/logs/observability` when present, otherwise `blackcat-observability/var`)
 
+## Monitoring stack (optional)
+
+Operational assets (Prometheus/Grafana/Loki dev stack) live in `blackcat-monitoring` and are controlled via `blackcat-cli`:
+
+```bash
+blackcat monitoring stack up --pull
+blackcat monitoring stack info
+blackcat verify
+```
+
 ## Runtime config (blackcat-config)
 
 When `blackcat-config` runtime config is available, `ObservabilityManager::boot()` reads:
