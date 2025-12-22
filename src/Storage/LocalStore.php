@@ -8,13 +8,31 @@ final class LocalStore
     private string $eventsFile;
     private string $metricsFile;
 
+    private string $storageDir;
+
     public function __construct(string $storageDir)
     {
         if (!is_dir($storageDir) && !@mkdir($storageDir, 0775, true) && !is_dir($storageDir)) {
             throw new \RuntimeException("Unable to create storage dir {$storageDir}");
         }
+        $this->storageDir = rtrim($storageDir, DIRECTORY_SEPARATOR);
         $this->eventsFile = rtrim($storageDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'events.ndjson';
         $this->metricsFile = rtrim($storageDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'metrics.ndjson';
+    }
+
+    public function storageDir(): string
+    {
+        return $this->storageDir;
+    }
+
+    public function eventsFilePath(): string
+    {
+        return $this->eventsFile;
+    }
+
+    public function metricsFilePath(): string
+    {
+        return $this->metricsFile;
     }
 
     /**
@@ -49,6 +67,24 @@ final class LocalStore
     public function metrics(): array
     {
         return $this->readFile($this->metricsFile);
+    }
+
+    public function clearEvents(): void
+    {
+        $this->truncate($this->eventsFile);
+    }
+
+    public function clearMetrics(): void
+    {
+        $this->truncate($this->metricsFile);
+    }
+
+    private function truncate(string $file): void
+    {
+        if (!is_file($file)) {
+            return;
+        }
+        @file_put_contents($file, '');
     }
 
     /**

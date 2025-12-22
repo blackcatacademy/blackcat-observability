@@ -15,9 +15,10 @@ This repo ships a `blackcat-cli` manifest (`blackcat-cli.json`). CLI behavior li
 ```bash
 blackcat observability events:tail --limit=10
 blackcat observability metrics:snapshot
+blackcat observability metrics:export prom
 ```
 
-By default, the local store directory is `blackcat-observability/var` (override with `--storage-dir=...` or `OBS_STORAGE`).
+By default, the local store directory is `blackcat-observability/var` (override with `--storage-dir=...`).
 
 ## Quick start
 
