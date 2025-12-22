@@ -12,7 +12,6 @@ use Psr\Log\NullLogger;
 
 final class ObservabilityManager
 {
-    private ObservabilityConfig $config;
     private LocalStore $store;
     private EventBus $events;
     private MetricsRegistry $metrics;
@@ -21,7 +20,6 @@ final class ObservabilityManager
         ObservabilityConfig $config,
         LoggerInterface $logger
     ) {
-        $this->config = $config;
         $this->store = new LocalStore($config->storageDir);
         $this->events = new EventBus($config, $this->store, $logger);
         $this->metrics = new MetricsRegistry($config, $this->store);

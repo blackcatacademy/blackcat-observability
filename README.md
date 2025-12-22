@@ -1,48 +1,29 @@
 # BlackCat Observability
 
-Centralizovaná observability vrstva pro celý BlackCat stack. Cílem je sjednotit logování, metriky (Prometheus, OTLP), tracing, alerting a real-time event streaming (SSE/Webhooks) tak, aby každé repo (auth, database, messaging, crypto…) implementovalo stejné standardy.
+Observability SDK for the BlackCat ecosystem (events + metrics today; exporters/tracing planned).
 
-## Klíčové prvky
+## What it provides
 
-- **Unified SDK** – `ObservabilityManager` poskytuje jednoduché API (`metrics()`, `events()`, `traces()`) pro publikační a sběrné moduly.
-- **Multi-export** – podporujeme Prometheus, OpenTelemetry/OTLP, Loki, Kafka + webhooky, volitelně „firehose“ pro SecOps.
-- **Sensitive data guard** – integrace s `blackcat-crypto` (masking + envelope) a `blackcat-auth` policy (tenant/quota).
-- **Dev tooling** – CLI `bin/observability` s příkazy `metrics:tail`, `events:stream`, `alerts:test`.
+- `ObservabilityManager` with a minimal API (`events()`, `metrics()`).
+- `LocalStore` (NDJSON files) for dev/testing storage.
+- PSR-3 friendly hooks (can integrate with existing loggers).
 
-## Struktura
+## CLI tooling
 
-```
-blackcat-observability/
-├── src/
-│   ├── ObservabilityManager.php
-│   ├── Metrics/
-│   ├── Events/
-│   └── Exporter/
-├── docs/ROADMAP.md
-├── README.md
-├── composer.json
-└── tests/
-```
-
-## Integrace
-
-- `blackcat-auth` → posílá audit události přes `AuthEventHook` + SSE feed (`/events/stream`).
-- `blackcat-messaging` → připojuje se do event pipeline (lag metrics, consumer status).
-- `blackcat-database` / `blackcat-database-sync` → metriky replikace, drift detection, CDC throughput.
-- `blackcat-crypto` → wrap queue metrics a KMS health state.
-
-## Rychlý start
+This repo ships a `blackcat-cli` manifest (`blackcat-cli.json`). CLI behavior lives in `blackcat-cli`:
 
 ```bash
-composer install
-php bin/observability help
-
-# tail posledních 10 událostí / snapshot metrik
-php bin/observability events:tail
-php bin/observability metrics:snapshot
+blackcat observability events:tail --limit=10
+blackcat observability metrics:snapshot
 ```
 
+By default, the local store directory is `blackcat-observability/var` (override with `--storage-dir=...` or `OBS_STORAGE`).
+
+## Quick start
+
 ```php
+use BlackCat\Observability\ObservabilityManager;
+
 $obs = ObservabilityManager::boot();
 $obs->events()->publish('auth.login', ['tenant' => 'eu-1', 'result' => 'success']);
 $obs->metrics()->counter('auth_logins_total')->inc(['result' => 'success']);

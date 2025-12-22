@@ -61,7 +61,12 @@ final class LocalStore
         }
 
         $entries = [];
-        foreach (file($file, FILE_IGNORE_NEW_LINES) as $line) {
+        $lines = file($file, FILE_IGNORE_NEW_LINES);
+        if ($lines === false) {
+            return [];
+        }
+
+        foreach ($lines as $line) {
             $decoded = json_decode($line, true);
             if (is_array($decoded)) {
                 $entries[] = $decoded;

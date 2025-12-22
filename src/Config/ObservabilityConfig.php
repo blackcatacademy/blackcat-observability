@@ -7,6 +7,9 @@ use InvalidArgumentException;
 
 final class ObservabilityConfig
 {
+    /**
+     * @param array<int,array<string,mixed>> $exporters
+     */
     public function __construct(
         public readonly string $service,
         public readonly string $storageDir,
@@ -53,6 +56,9 @@ final class ObservabilityConfig
         );
     }
 
+    /**
+     * @return array<string,mixed>
+     */
     private static function parseYaml(string $path): array
     {
         if (!function_exists('yaml_parse_file')) {

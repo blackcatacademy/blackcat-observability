@@ -17,6 +17,19 @@
             "BlackCat\\Observability\\Tests\\": "tests/"
         }
     },
+    "require-dev": {
+        "phpstan/phpstan": "^1.11",
+        "phpstan/phpstan-phpunit": "^1.4",
+        "phpunit/phpunit": "^11.0"
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit --colors=always",
+        "stan": "vendor/bin/phpstan analyse --configuration=phpstan.neon"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }

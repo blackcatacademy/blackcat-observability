@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "component": {
+    "id": "blackcat-observability",
+    "name": "BlackCat Observability",
+    "description": "Observability SDK (events, metrics, tracing/export adapters) for the BlackCat ecosystem.",
+    "homepage": "https://github.com/blackcatacademy/blackcat-observability",
+    "composer_package": "blackcat/observability"
+  },
+  "cli": {
+    "entrypoints": [
+      {
+        "id": "observability",
+        "command": "observability",
+        "summary": "Observability tooling (events tail, metrics snapshot, local store inspection).",
+        "type": "builtin"
+      }
+    ]
+  }
+}
+
