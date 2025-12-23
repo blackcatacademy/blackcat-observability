@@ -9,6 +9,7 @@
 - Prometheus exporter (pull mode), remote write (push), multi-registry aggregator.
 - Metric DSL (counter/gauge/histogram, buckets) shared across all repos.
 - Auto-binding (request_id, tenant, service) + safe labeling (PII masking).
+- Standardize trust-kernel telemetry series (quorum health, attestation age, safe-mode events) so `blackcat-monitoring` can ship dashboards/alerts without per-app glue.
 
 ## Stage 3 – Event Bus & Alerts
 - SSE + WebSocket streaming, webhook connectors (Slack, Teams, PagerDuty).
