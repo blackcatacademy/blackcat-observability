@@ -17,4 +17,9 @@ final class MetricsRegistry
     {
         return new Counter($name, $this->config, $this->store);
     }
+
+    public function gauge(string $name): Gauge
+    {
+        return new Gauge($name, $this->config, $this->store);
+    }
 }

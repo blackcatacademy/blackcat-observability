@@ -7,6 +7,9 @@ Observability SDK for the BlackCat ecosystem (events + metrics today; exporters/
 - `ObservabilityManager` with a minimal API (`events()`, `metrics()`).
 - `LocalStore` (NDJSON files) for dev/testing storage.
 - PSR-3 friendly hooks (can integrate with existing loggers).
+- Minimal metrics DSL:
+  - counters (`metrics()->counter(...)->inc()`)
+  - gauges (`metrics()->gauge(...)->set()`)
 
 ## CLI tooling
 
@@ -59,4 +62,9 @@ use BlackCat\Observability\ObservabilityManager;
 $obs = ObservabilityManager::boot();
 $obs->events()->publish('auth.login', ['tenant' => 'eu-1', 'result' => 'success']);
 $obs->metrics()->counter('auth_logins_total')->inc(['result' => 'success']);
+$obs->metrics()->gauge('trust_kernel_ok')->set([], 1);
 ```
+
+Prometheus export semantics:
+- counters are summed across events,
+- gauges keep the last value by timestamp (last-write-wins).

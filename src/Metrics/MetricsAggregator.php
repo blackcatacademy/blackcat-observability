@@ -41,7 +41,12 @@ final class MetricsAggregator
      */
     public static function sumBySeries(array $metrics, bool $includeServiceLabel = true): array
     {
-        /** @var array<string,array{name:string,type:string,labels:array<string,string>,value:float}> $series */
+        /**
+         * Aggregation semantics:
+         * - counters: sum values
+         * - gauges: keep the last value by timestamp
+         */
+        /** @var array<string,array{name:string,type:string,labels:array<string,string>,value:float,ts:int}> $series */
         $series = [];
 
         foreach ($metrics as $metric) {
@@ -54,7 +59,7 @@ final class MetricsAggregator
                 continue;
             }
 
-            $type = is_string($metric['type'] ?? null) ? trim((string) $metric['type']) : '';
+            $type = is_string($metric['type'] ?? null) ? strtolower(trim((string) $metric['type'])) : '';
             if ($type === '') {
                 $type = 'gauge';
             }
@@ -64,6 +69,9 @@ final class MetricsAggregator
                 continue;
             }
             $value = (float) $rawValue;
+
+            $rawTs = $metric['timestamp'] ?? null;
+            $ts = is_int($rawTs) ? $rawTs : (is_numeric($rawTs) ? (int) $rawTs : 0);
 
             $labels = [];
             $rawLabels = $metric['labels'] ?? null;
@@ -95,13 +103,34 @@ final class MetricsAggregator
                     'type' => $type,
                     'labels' => $labels,
                     'value' => 0.0,
+                    'ts' => $ts,
                 ];
             }
-            $series[$seriesKey]['value'] += $value;
+
+            if ($type === 'counter') {
+                $series[$seriesKey]['value'] += $value;
+                continue;
+            }
+
+            // Gauge semantics (and default for unknown types): last write wins by timestamp.
+            if ($ts >= $series[$seriesKey]['ts']) {
+                $series[$seriesKey]['value'] = $value;
+                $series[$seriesKey]['ts'] = $ts;
+            }
         }
 
         ksort($series);
-        return array_values($series);
+
+        $out = [];
+        foreach ($series as $row) {
+            $out[] = [
+                'name' => $row['name'],
+                'type' => $row['type'],
+                'labels' => $row['labels'],
+                'value' => $row['value'],
+            ];
+        }
+
+        return $out;
     }
 }
-
